@@ -281,17 +281,29 @@ class DatAnalysisTest < MiniTest::Unit::TestCase
     end
   end
 
-  def test_skip_returns_0_if_the_current_result_satisfies_the_block_and_no_other_results_are_available
+  def test_skip_returns_0_if_the_current_result_does_not_satisfy_the_block_and_no_other_results_are_available
     @analyzer.mismatches.push @result
 
     remaining = @analyzer.skip do |result|
-      true
+      false
     end
 
     assert_equal 0, remaining
   end
 
-  def test_skip_returns_the_number_of_additional_results_if_the_current_result_satisfies_the_block_and_other_results_are_available
+  def test_skip_returns_the_number_of_additional_results_if_the_current_result_does_not_satisfy_the_block_and_other_results_are_available
+    @analyzer.mismatches.push @result
+    @analyzer.mismatches.push @result
+    @analyzer.mismatches.push @result
+
+    remaining = @analyzer.skip do |result|
+      false
+    end
+
+    assert_equal 2, remaining
+  end
+
+  def test_skip_returns_nil_if_all_results_are_satisfying
     @analyzer.mismatches.push @result
     @analyzer.mismatches.push @result
     @analyzer.mismatches.push @result
@@ -300,40 +312,28 @@ class DatAnalysisTest < MiniTest::Unit::TestCase
       true
     end
 
-    assert_equal 2, remaining
-  end
-
-  def test_skip_returns_nil_if_no_results_are_satisfying
-    @analyzer.mismatches.push @result
-    @analyzer.mismatches.push @result
-    @analyzer.mismatches.push @result
-
-    remaining = @analyzer.skip do |result|
-      false
-    end
-
     assert_nil remaining
   end
 
-  def test_skip_skips_all_results_if_no_results_are_satisfying
+  def test_skip_skips_all_results_if_all_results_are_satisfying
     @analyzer.mismatches.push @result
     @analyzer.mismatches.push @result
     @analyzer.mismatches.push @result
 
     remaining = @analyzer.skip do |result|
-      false
+      true
     end
 
     assert !@analyzer.more?
   end
 
-  def test_skip_leaves_current_as_nil_if_no_results_are_satisfying
+  def test_skip_leaves_current_as_nil_if_all_results_are_satisfying
     @analyzer.mismatches.push @result
     @analyzer.mismatches.push @result
     @analyzer.mismatches.push @result
 
     remaining = @analyzer.skip do |result|
-      false
+      true
     end
 
     assert_nil @analyzer.current

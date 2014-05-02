@@ -95,11 +95,11 @@ module Dat
       end
     end
 
-    # Public: skip pending mismatch results not satisfying the provided block.
+    # Public: skip pending mismatch results satisfying the provided block.
     # May modify current mismatch result.
     #
     # &block - block accepting a prepared mismatch result and returning true
-    #          or false.
+    #          if the result should be skipped and false otherwise.
     #
     # Examples:
     #
@@ -115,15 +115,16 @@ module Dat
     #     result['timestamp'].to_i > 1.hour.ago
     #   end
     #
-    # Returns nil if no satisfying results are found.  Current result will be nil.
-    # Returns count of remaining results if a satisfying result found.  Leaves
-    # current result set to first result for which block returns a truthy value.
+    # Returns nil if all results are skipped.  Current result will be nil.
+    # Returns count of remaining results if a result not matching the skip
+    # condition is found.  Leaves current result set to first result for
+    # which block returns a falsey value.
     def skip(&block)
       raise ArgumentError, "a block is required" unless block_given?
 
       while more?
         fetch
-        return count if yield(current)
+        return count unless yield(current)
       end
 
       # clear current result since nothing of interest was found.
